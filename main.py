@@ -43,13 +43,16 @@ class CV:
         return mat
 
 if __name__ == '__main__':
-    os.system('cls')
+    # os.system('cls')
+    os.system('clear')
     K = np.array([[1406.08415449821,                0, 0],
                   [2.20679787308599, 1417.99930662800, 0],
                   [1014.13643417416, 566.347754321696, 1]])
 
-    cv = CV('Tag0.mp4')
+    cv = CV('Tag1.mp4')
+    counter = 0
     while True:
+        counter += 1
         ret, frame = cv.video_feed.read()
 
         if not ret:
@@ -72,6 +75,17 @@ if __name__ == '__main__':
         # Apply a closing morphilogical transformation to the image. This will act as a mask
         closing = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((61,61), np.uint8))
         
+        non0px = np.nonzero(closing)
+        med_row = int(np.median(non0px[0]))
+        med_col = int(np.median(non0px[1]))
+
+        roi_buffer = 150
+        closing[:(med_row-roi_buffer),:] = 0
+        closing[(med_row+roi_buffer):, :] = 0
+
+        closing[:, :(med_col-roi_buffer)] = 0
+        closing[:, (med_col+roi_buffer):] = 0
+
         # 
         masked = closing * frame
         masked = cv2.morphologyEx(masked, cv2.MORPH_OPEN, np.ones((5,5), np.uint8))
@@ -86,7 +100,13 @@ if __name__ == '__main__':
         med_x = np.median(non0px[0])
         med_y = np.median(non0px[1])
 
-        # roi = 
+        try:
+            med_x = int(med_x)
+            med_y = int(med_y)
+        except ValueError:
+            continue
+
+        # roi = np.where(frame)
 
         min_x_arg = np.min(non0px[0])
         max_x_arg = np.max(non0px[0])
@@ -94,9 +114,9 @@ if __name__ == '__main__':
         max_y_arg = np.max(non0px[1])
 
         min_dist = min((max_x_arg-min_x_arg, max_y_arg-min_y_arg))
-        print(min_dist)
+        print(f"frame {counter}: {min_dist}")
 
-        dilate_size = 5
+        dilate_size = 1
         if min_dist > 250:
             dilate_size = 15
         elif min_dist > 230:
@@ -105,8 +125,12 @@ if __name__ == '__main__':
             dilate_size = 11
         elif min_dist > 170:
             dilate_size = 9
-        elif min_dist > 140:
+        elif min_dist > 130:
             dilate_size = 7
+        elif min_dist > 100:
+            dilate_size = 5
+        elif min_dist > 75:
+            dilate_size = 3
 
         frame_cp = cv2.dilate(frame_cp, np.ones((dilate_size, dilate_size), dtype=np.uint8))
 
@@ -115,7 +139,16 @@ if __name__ == '__main__':
         # # find centroids
         ret, labels, stats, centroids = cv2.connectedComponentsWithStats(frame_cp)
         # print(f"ret {ret}", f"labels {labels}", f"stats {stats}", f"centroids{centroids}", sep='\n')
-        corner_filter_1 = np.argpartition(stats[:,-1], 5)[:5]
+        
+        corner_filter_1 = None
+        num_arr = 5
+        while True:
+            try:
+                corner_filter_1 = np.argpartition(stats[:,-1], num_arr)[:num_arr]
+                break
+            except:
+                num_arr -= 1
+
         filtered_1 = centroids[corner_filter_1]
 
         min_x_arg = np.argmin(filtered_1[:,0])
@@ -123,7 +156,7 @@ if __name__ == '__main__':
         min_y_arg = np.argmin(filtered_1[:,1])
         max_y_arg = np.argmax(filtered_1[:,1])
 
-        wait = 1
+        wait = 0
         try:
             filtered_2 = filtered_1[np.sum(list(range(5)))-(min_x_arg+min_y_arg+max_x_arg+max_y_arg)]
             filtered_2 = (int(round(filtered_2[0])), int(round(filtered_2[1])))
@@ -131,8 +164,9 @@ if __name__ == '__main__':
             cv2.circle(frame, filtered_2, 5, 0, -1)
         except IndexError:
             print("Index Error")
-            wait = 0
+            # wait = 0
 
+        cv2.circle(frame, (med_y, med_x), 5, 0, -1)
         img_top = np.hstack((frame, closing))
         img_bot = np.hstack((masked, frame_cp))
         img = np.vstack((img_top, img_bot))
