@@ -43,13 +43,13 @@ class CV:
         return mat
 
 if __name__ == '__main__':
-    # os.system('cls')
-    os.system('clear')
+    os.system('cls')
+    # os.system('clear')
     K = np.array([[1406.08415449821,                0, 0],
                   [2.20679787308599, 1417.99930662800, 0],
                   [1014.13643417416, 566.347754321696, 1]])
 
-    cv = CV('Tag1.mp4')
+    cv = CV('Tag0.mp4')
     counter = 0
     while True:
         counter += 1
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
         # ret, dst = cv.threshold(dst,0.01*dst.max(),255,0)
         # dst = np.uint8(dst)
-        # # find centroids
+        # find centroids
         ret, labels, stats, centroids = cv2.connectedComponentsWithStats(frame_cp)
         # print(f"ret {ret}", f"labels {labels}", f"stats {stats}", f"centroids{centroids}", sep='\n')
         
@@ -156,17 +156,16 @@ if __name__ == '__main__':
         min_y_arg = np.argmin(filtered_1[:,1])
         max_y_arg = np.argmax(filtered_1[:,1])
 
-        wait = 0
-        try:
-            filtered_2 = filtered_1[np.sum(list(range(5)))-(min_x_arg+min_y_arg+max_x_arg+max_y_arg)]
-            filtered_2 = (int(round(filtered_2[0])), int(round(filtered_2[1])))
-            # print(filtered_2)
-            cv2.circle(frame, filtered_2, 5, 0, -1)
-        except IndexError:
-            print("Index Error")
-            # wait = 0
+        # wait = 1
+        # try:
+        #     filtered_2 = filtered_1[np.sum(list(range(5)))-(min_x_arg+min_y_arg+max_x_arg+max_y_arg)]
+        #     filtered_2 = (int(round(filtered_2[0])), int(round(filtered_2[1])))
+        #     # print(filtered_2)
+        #     cv2.circle(frame, filtered_2, 5, 0, -1)
+        # except IndexError:
+        #     print("Index Error")
+        #     # wait = 0
 
-        cv2.circle(frame, (med_y, med_x), 5, 0, -1)
         img_top = np.hstack((frame, closing))
         img_bot = np.hstack((masked, frame_cp))
         img = np.vstack((img_top, img_bot))
