@@ -5,11 +5,7 @@ import numpy as np
 class ARReader:
     def __init__(self) -> None:
         self.uint8_0 = np.uint8(0)
-        self.uint8_half = np.uint8(255//2)
-    
-    def sim_cv_output(self, tag):
-        
-        return tag      
+        self.uint8_half = np.uint8(255//2)    
 
     def read_tag(self, tag, ret_img=False):
         non0pts = np.nonzero(tag)

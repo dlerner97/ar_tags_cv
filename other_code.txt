@@ -1,3 +1,4 @@
+
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Apply Gaussian Blur to the image (11x11)

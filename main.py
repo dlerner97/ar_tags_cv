@@ -4,11 +4,13 @@ import math
 import numpy as np
 import pandas as pd
 from scipy import fftpack
+from read_ar import ARReader
 from matplotlib import pyplot as plt
 
 
-class CV:
+class CV(ARReader):
     def __init__(self, vid_path):
+        super().__init__()
         self.video_feed = cv2.VideoCapture(vid_path)
 
     # Resize the frame
