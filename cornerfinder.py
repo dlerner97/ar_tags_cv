@@ -38,6 +38,17 @@ class CornerFinder:
         inv_thresh = 255 - thresholded
         inner_tag = cv2.bitwise_and(inv_thresh, inv_thresh, mask=closed)
         inner_tag = cv2.morphologyEx(inner_tag, cv2.MORPH_CLOSE, structure)
+        
+        num_regions, _, stats, _ = cv2.connectedComponentsWithStats(inner_tag)
+        region_filter = np.argpartition(stats[:,cv2.CC_STAT_AREA], num_regions-1) 
+        w_region = stats[region_filter[-2], cv2.CC_STAT_WIDTH]
+        h_region = stats[region_filter[-2], cv2.CC_STAT_HEIGHT]
+        left_region = stats[region_filter[-2], cv2.CC_STAT_LEFT]
+        top_region = stats[region_filter[-2], cv2.CC_STAT_TOP]
+        
+        mask = np.zeros_like(closed)
+        mask[top_region-buffer:top_region+h_region+buffer, left_region-buffer:left_region+w_region+buffer] = 255
+        inner_tag = cv2.bitwise_and(inner_tag, inner_tag, mask=mask)
 
         corners = cv2.cornerHarris(inner_tag, 10, 11, .05)
         corners = cv2.dilate(corners, None)
@@ -53,28 +64,32 @@ class CornerFinder:
         
         try:
             final_corners = [(int(round(corner[0])),int(round(corner[1]))) for corner in filtered_1]
-            
-            filtered_corners = np.zeros_like(corner_img, np.uint8)
-            for centroid in final_corners:
-                cv2.circle(filtered_corners, centroid, 5, 255, -1)
+            return final_corners
+        
+            # filtered_corners = np.zeros_like(corner_img, np.uint8)
+            # for centroid in final_corners:
+            #     cv2.circle(filtered_corners, centroid, 5, 255, -1)
 
-            cv2.imshow("corners", self.resize_frame(filtered_corners, 30))
+            # cv2.imshow("corners", self.resize_frame(filtered_corners, 80))
 
             # cv2.imshow("corners", self.resize_frame(filtered_corners, 30))
-            k = cv2.waitKey(1) & 0xff
-            if k == ord('q'):
-                exit()         
+            # k = cv2.waitKey(1) & 0xff
+            # if k == ord('q'):
+            #     exit() 
+            # elif k == ord('s'):
+            #     wait = 
+                        
         except TypeError:
             print("Failed")
-        img = closed
-        return img
+
+        return None
         
         
 if __name__ == '__main__':
     os.system("cls")
     video_feed = cv2.VideoCapture("Tag0.mp4")
     corner_finder = CornerFinder()
-    
+    wait = 1
     try:
         while True:
             ret, frame = video_feed.read()
@@ -90,9 +105,14 @@ if __name__ == '__main__':
             
             img = corner_finder.resize_frame(img, 70)
             cv2.imshow("img", img)
-            k = cv2.waitKey(1) & 0xff
+            k = cv2.waitKey(wait) & 0xff
             if k == ord('q'):
                 break
+            elif k == ord('s'):
+                if wait == 0:
+                    wait = 1
+                else:
+                    wait = 0
     except KeyboardInterrupt:
         pass
     
