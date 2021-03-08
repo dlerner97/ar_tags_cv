@@ -61,10 +61,10 @@ class CornerFinder:
         num_regions, _, stats, centroids = cv2.connectedComponentsWithStats(corner_img)
         corner_filter_1 = np.argpartition(stats[:, cv2.CC_STAT_AREA], num_regions-1)[:num_regions-1]         
         filtered_1 = centroids[corner_filter_1]
-        
+
         try:
             final_corners = [(int(round(corner[0])),int(round(corner[1]))) for corner in filtered_1]
-            return final_corners
+            return final_corners, inner_tag
         
             # filtered_corners = np.zeros_like(corner_img, np.uint8)
             # for centroid in final_corners:
@@ -101,7 +101,8 @@ if __name__ == '__main__':
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             img = corner_finder.get_corners(frame)
             
-            img = np.vstack((frame, img))
+            # img = np.vstack((frame, img))
+            img = frame
             
             img = corner_finder.resize_frame(img, 70)
             cv2.imshow("img", img)
