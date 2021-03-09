@@ -6,11 +6,12 @@ class ARReader:
         self.uint8_0 = np.uint8(0)
         self.uint8_half = np.uint8(255//2) 
 
+    # Read tag
     def read_tag(self, tag, draw_grid=False):
+        # Preprocessing
         _,tag = cv2.threshold(tag, 200, 255, cv2.THRESH_BINARY)
         tag = cv2.morphologyEx(tag, cv2.MORPH_OPEN, np.ones((9,9), np.uint8))
         tag = cv2.GaussianBlur(tag, (11,11), 0)
-        cv2.imshow("t", tag)
         t_shape = tag.shape
         
         min_non_zero_row = 0
@@ -25,12 +26,12 @@ class ARReader:
         bin_rows = int(round(span_rows/num_bins))
         bin_cols = int(round(span_cols/num_bins))
         
+        # Apply grid
         full_ar_map = np.zeros((num_bins, num_bins), np.uint8)
         if draw_grid:
             for i in range(num_bins+1):
                 cv2.line(tag, (min_non_zero_col, i*bin_rows), (max_non_zero_col, i*bin_rows), 150, 2)
                 cv2.line(tag, (i*bin_cols, min_non_zero_row), (i*bin_cols, max_non_zero_row), 150, 2)
-            cv2.imshow("tg",tag)
         for row in range(num_bins):
             for col in range(num_bins):
                 temp_section = tag[row*bin_rows:(row+1)*bin_rows, col*bin_cols: (col+1)*bin_cols]
@@ -51,6 +52,7 @@ class ARReader:
                        'n10' : int(bit_11+bit_21+bit_22+bit_12,2),
                        'n1n1': int(bit_21+bit_22+bit_12+bit_11,2)}
         
+        # Get word and orientation
         word = None
         quadrent = None
         if qr_tag[0,0] > 200:
